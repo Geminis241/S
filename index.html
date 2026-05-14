@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Escolar de Energía</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --surface: #0d1821;
+    --surface2: #112233;
+    --border: rgba(0,255,180,0.12);
+    --gen: #00ffb3;
+    --gen2: #00c87a;
+    --gen-glow: rgba(0,255,179,0.18);
+    --con: #ff5c35;
+    --con2: #ff8c00;
+    --con-glow: rgba(255,92,53,0.18);
+    --text: #e2edf7;
+    --muted: #5a7a94;
+    --accent: #00d4ff;
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === GRID BG === */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      linear-gradient(rgba(0,255,179,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,179,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* === HEADER === */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 48px 24px 36px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-glow {
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:600px; height:300px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,255,179,0.12) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  .header-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(0,255,179,0.08);
+    border: 1px solid rgba(0,255,179,0.25);
+    border-radius: 100px;
+    padding: 6px 18px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gen);
+    margin-bottom: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight:500;
+  }
+
+  .header-badge::before {
+    content:'';
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--gen);
+    box-shadow: 0 0 8px var(--gen);
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%,100%{opacity:1} 50%{opacity:0.3}
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 5vw, 56px);
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #ffffff 0%, var(--gen) 60%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    letter-spacing: 0.5px;
+  }
+
+  /* === STATS ROW === */
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 28px 24px;
+    position: relative; z-index:5;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 28px;
+    text-align: center;
+    min-width: 150px;
+    position:relative; overflow:hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .stat-card::after {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .stat-card.gen::after { background: linear-gradient(90deg, transparent, var(--gen), transparent); }
+  .stat-card.con::after { background: linear-gradient(90deg, transparent, var(--con), transparent); }
+  .stat-card.neu::after { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    display:block;
+  }
+  .stat-card.gen .stat-value { color: var(--gen); }
+  .stat-card.con .stat-value { color: var(--con); }
+  .stat-card.neu .stat-value { color: var(--accent); }
+
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight:500;
+  }
+
+  /* === MAIN CONTAINER === */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    position: relative; z-index:5;
+  }
+
+  /* === SECTION === */
+  .section {
+    margin-bottom: 56px;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .icon-bolt {
+    width:36px; height:36px;
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .icon-bolt.gen { background: var(--gen-glow); color: var(--gen); }
+  .icon-bolt.con { background: var(--con-glow); color: var(--con); }
+
+  /* === TABS === */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .tab {
+    padding: 8px 20px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.25s ease;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .tab.active-gen {
+    background: linear-gradient(135deg, rgba(0,255,179,0.2), rgba(0,200,122,0.15));
+    color: var(--gen);
+    box-shadow: 0 0 16px rgba(0,255,179,0.15);
+  }
+
+  .tab.active-con {
+    background: linear-gradient(135deg, rgba(255,92,53,0.2), rgba(255,140,0,0.15));
+    color: var(--con);
+    box-shadow: 0 0 16px rgba(255,92,53,0.15);
+  }
+
+  /* === RANKING LIST === */
+  .ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .rank-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .rank-item:hover {
+    border-color: rgba(0,255,179,0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .rank-item.con-mode:hover {
+    border-color: rgba(255,92,53,0.3);
+  }
+
+  .rank-item::before {
+    content:'';
+    position:absolute; top:0; left:0; bottom:0; width:3px;
+    border-radius:0 2px 2px 0;
+    opacity:0;
+    transition: opacity 0.2s;
+  }
+  .rank-item.gen-mode::before { background: var(--gen); }
+  .rank-item.con-mode::before { background: var(--con); }
+  .rank-item:hover::before { opacity:1; }
+
+  /* TOP 3 special */
+  .rank-item.top1 { border-color: rgba(255,215,0,0.3); background: linear-gradient(135deg, var(--surface), rgba(255,215,0,0.05)); }
+  .rank-item.top2 { border-color: rgba(192,192,192,0.2); }
+  .rank-item.top3 { border-color: rgba(205,127,50,0.2); }
+
+  .rank-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    text-align:center;
+    line-height:1;
+  }
+
+  .rank-num.p1 { color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.5); }
+  .rank-num.p2 { color: var(--silver); }
+  .rank-num.p3 { color: var(--bronze); }
+  .rank-num.rest { color: var(--muted); font-size:15px; }
+
+  .rank-info { min-width: 0; }
+
+  .rank-name {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+  }
+
+  .rank-bar-wrap {
+    height: 5px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .rank-bar {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1s cubic-bezier(.23,1,.32,1);
+    width: 0;
+  }
+
+  .rank-bar.gen { background: linear-gradient(90deg, var(--gen2), var(--gen)); box-shadow: 0 0 8px var(--gen-glow); }
+  .rank-bar.con { background: linear-gradient(90deg, var(--con), var(--con2)); box-shadow: 0 0 8px var(--con-glow); }
+
+  .rank-value {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .rank-kwh {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    display: block;
+  }
+  .rank-kwh.gen { color: var(--gen); }
+  .rank-kwh.con { color: var(--con); }
+
+  .rank-unit {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-top:2px;
+    display:block;
+  }
+
+  /* sub-info badges */
+  .rank-meta {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge.gen { background: rgba(0,255,179,0.1); color: var(--gen); border: 1px solid rgba(0,255,179,0.2); }
+  .badge.con { background: rgba(255,92,53,0.1); color: var(--con); border: 1px solid rgba(255,92,53,0.2); }
+  .badge.neu { background: rgba(0,212,255,0.08); color: var(--accent); border: 1px solid rgba(0,212,255,0.15); }
+
+  /* === EXPAND (alumnos detail) === */
+  .students-wrap {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    flex-direction: column;
+    gap: 6px;
+  }
+  .students-wrap.open { display:flex; }
+
+  .student-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+
+  .student-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items:center; justify-content:center;
+    font-size: 11px; font-weight:700;
+    flex-shrink:0;
+    color:#fff;
+  }
+
+  .student-name { flex:1; font-size:13px; font-weight:500; }
+
+  .student-bar-wrap {
+    flex:2; height:4px;
+    background: rgba(255,255,255,0.05);
+    border-radius:100px; overflow:hidden;
+  }
+  .student-bar {
+    height:100%; border-radius:100px;
+    transition: width 1.2s cubic-bezier(.23,1,.32,1);
+    width:0;
+  }
+  .student-bar.gen { background: linear-gradient(90deg, var(--gen2), var(--gen)); }
+  .student-bar.con { background: linear-gradient(90deg, var(--con), var(--con2)); }
+
+  .student-kwh {
+    font-family:'Orbitron',monospace;
+    font-size:11px; font-weight:700;
+    min-width:60px; text-align:right;
+    white-space:nowrap;
+  }
+  .student-kwh.gen { color: var(--gen); }
+  .student-kwh.con { color: var(--con); }
+
+  /* = expand indicator = */
+  .expand-btn {
+    background: none; border: none; cursor:pointer;
+    color: var(--muted); font-size:11px;
+    text-transform:uppercase; letter-spacing:1px;
+    display:flex; align-items:center; gap:4px;
+    padding:0; font-family:'DM Sans',sans-serif; font-weight:600;
+    margin-top:8px;
+    transition: color 0.2s;
+  }
+  .expand-btn:hover { color: var(--text); }
+  .expand-btn .arrow { transition: transform 0.3s; display:inline-block; }
+  .expand-btn.open .arrow { transform: rotate(180deg); }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .rank-item:nth-child(1)  { animation-delay:0.05s }
+  .rank-item:nth-child(2)  { animation-delay:0.10s }
+  .rank-item:nth-child(3)  { animation-delay:0.15s }
+  .rank-item:nth-child(4)  { animation-delay:0.20s }
+  .rank-item:nth-child(5)  { animation-delay:0.25s }
+  .rank-item:nth-child(6)  { animation-delay:0.30s }
+  .rank-item:nth-child(7)  { animation-delay:0.35s }
+  .rank-item:nth-child(8)  { animation-delay:0.40s }
+  .rank-item:nth-child(9)  { animation-delay:0.45s }
+  .rank-item:nth-child(10) { animation-delay:0.50s }
+
+  .stat-card:nth-child(1){ animation-delay:0.1s }
+  .stat-card:nth-child(2){ animation-delay:0.2s }
+  .stat-card:nth-child(3){ animation-delay:0.3s }
+  .section:nth-child(1){ animation-delay:0.3s }
+  .section:nth-child(2){ animation-delay:0.5s }
+
+  @keyframes fadeUp {
+    from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)}
+  }
+
+  /* === FOOTER === */
+  footer {
+    text-align:center;
+    padding:32px 24px;
+    border-top:1px solid var(--border);
+    color: var(--muted);
+    font-size:12px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    position:relative; z-index:5;
+  }
+
+  footer span { color: var(--gen); }
+
+  /* === RESPONSIVE === */
+  @media(max-width:600px){
+    .rank-item { grid-template-columns: 40px 1fr auto; gap:10px; padding:12px 14px; }
+    .rank-num { font-size:16px; }
+    .rank-kwh { font-size:13px; }
+    .tabs { overflow-x:auto; }
+    .section-header { flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-glow"></div>
+  <div class="header-badge">⚡ Panel Energético Activo</div>
+  <h1>Sistema Escolar<br>de Energía</h1>
+  <p class="subtitle">Monitoreo de generación y consumo · Ciclo lectivo 2025</p>
+</header>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="container">
+  <div class="section" id="coursesSection">
+    <div class="section-header">
+      <div class="section-title">
+        <div class="icon-bolt gen">🏫</div>
+        <h2>Ranking por Cursos</h2>
+      </div>
+      <div class="tabs" id="coursesTabs">
+        <button class="tab active-gen" onclick="switchTab('courses','gen',this)">⚡ Mayor Generación</button>
+        <button class="tab" onclick="switchTab('courses','con',this)">🔥 Mayor Consumo</button>
+      </div>
+    </div>
+    <div class="ranking-list" id="coursesList"></div>
+  </div>
+
+  <div class="section" id="studentsSection">
+    <div class="section-header">
+      <div class="section-title">
+        <div class="icon-bolt con">👤</div>
+        <h2>Ranking por Alumnos</h2>
+      </div>
+      <div class="tabs" id="studentsTabs">
+        <button class="tab active-gen" onclick="switchTab('students','gen',this)">⚡ Mayor Generación</button>
+        <button class="tab" onclick="switchTab('students','con',this)">🔥 Mayor Consumo</button>
+      </div>
+    </div>
+    <div class="ranking-list" id="studentsList"></div>
+  </div>
+</div>
+
+<footer>
+  Datos simulados · <span>Sistema Escolar de Energía</span> · 2025
+</footer>
+
+<script>
+// ========================
+// DATA GENERATION
+// ========================
+const COURSES = [
+  '1ro A','1ro B','1ro C','1ro D',
+  '2do A','2do B','2do C','2do D',
+  '3ro A','3ro B','3ro C','3ro D',
+  '4to A','4to B','4to C',
+  '5to A','5to B'
+];
+
+const FIRST_NAMES = [
+  'Valentina','Mateo','Sofía','Lucía','Santiago','Isabella','Lucas','Camila',
+  'Nicolás','Valeria','Sebastián','Martina','Emilio','Renata','Facundo',
+  'Juliana','Tomás','Florencia','Agustín','Rocío','Joaquín','Almendra',
+  'Federico','Nadia','Ramiro','Julieta','Ezequiel','Candela','Rodrigo',
+  'Ailin','Maximiliano','Milagros','Leandro','Natalia','Iván','Pilar',
+  'Gonzalo','Yamila','Braian','Sol','Nahuel','Antonella','Lautaro','Priscila',
+  'Diego','Celeste','Marcos','Verónica','Alan','Cinthia','Adrián','Paola'
+];
+
+const LAST_NAMES = [
+  'García','López','Martínez','González','Rodríguez','Pérez','Sánchez',
+  'Ramírez','Torres','Flores','Hernández','Morales','Jiménez','Álvarez',
+  'Romero','Castro','Gutiérrez','Medina','Ortiz','Vargas','Ruiz','Díaz',
+  'Suárez','Guerrero','Cabrera','Vega','Mendoza','Herrera','Navarro','Acosta'
+];
+
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function fullName(){ return pick(FIRST_NAMES)+' '+pick(LAST_NAMES); }
+function initials(n){ const p=n.split(' '); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase(); }
+
+// Generate students per course
+const courseData = COURSES.map(course => {
+  const numStudents = rnd(20,32);
+  const students = Array.from({length:numStudents},(_,i)=>{
+    const name = fullName();
+    return {
+      id: i,
+      name,
+      initials: initials(name),
+      generated: rnd(80,980),   // kWh
+      consumed: rnd(120,1100),  // kWh
+      color: `hsl(${rnd(0,360)},60%,55%)`
+    };
+  });
+  const totalGen = students.reduce((a,s)=>a+s.generated,0);
+  const totalCon = students.reduce((a,s)=>a+s.consumed,0);
+  return { name:course, students, generated:totalGen, consumed:totalCon };
+});
+
+// Flat student list (top performers per course for global ranking)
+const allStudents = courseData.flatMap(c=>
+  c.students.map(s=>({...s, course:c.name}))
+);
+
+// Sort copies
+function sortBy(arr, key){
+  return [...arr].sort((a,b)=>b[key]-a[key]);
+}
+
+// ========================
+// GLOBAL STATS
+// ========================
+function renderStats(){
+  const totalGen = courseData.reduce((a,c)=>a+c.generated,0);
+  const totalCon = courseData.reduce((a,c)=>a+c.consumed,0);
+  const balance = totalGen - totalCon;
+  const el = document.getElementById('statsRow');
+  el.innerHTML = `
+    <div class="stat-card gen">
+      <span class="stat-value">${fmt(totalGen)}</span>
+      <div class="stat-label">kWh generados</div>
+    </div>
+    <div class="stat-card con">
+      <span class="stat-value">${fmt(totalCon)}</span>
+      <div class="stat-label">kWh consumidos</div>
+    </div>
+    <div class="stat-card neu">
+      <span class="stat-value">${balance>=0?'+':''}${fmt(balance)}</span>
+      <div class="stat-label">Balance neto</div>
+    </div>
+    <div class="stat-card neu">
+      <span class="stat-value">${COURSES.length}</span>
+      <div class="stat-label">Cursos activos</div>
+    </div>
+    <div class="stat-card neu">
+      <span class="stat-value">${allStudents.length}</span>
+      <div class="stat-label">Alumnos</div>
+    </div>
+  `;
+}
+
+function fmt(n){ return n.toLocaleString('es-AR'); }
+
+// ========================
+// RANKING RENDER
+// ========================
+let courseMode = 'gen';
+let studentsMode = 'gen';
+
+function rankClass(i){
+  if(i===0) return 'top1';
+  if(i===1) return 'top2';
+  if(i===2) return 'top3';
+  return '';
+}
+function numClass(i){
+  if(i===0) return 'p1';
+  if(i===1) return 'p2';
+  if(i===2) return 'p3';
+  return 'rest';
+}
+function numDisplay(i){
+  if(i===0) return '🥇';
+  if(i===1) return '🥈';
+  if(i===2) return '🥉';
+  return `#${i+1}`;
+}
+
+function renderCourses(mode){
+  courseMode = mode;
+  const key = mode==='gen'?'generated':'consumed';
+  const sorted = sortBy(courseData, key);
+  const maxVal = sorted[0][key];
+  const cls = mode==='gen'?'gen':'con';
+  const el = document.getElementById('coursesList');
+  el.innerHTML = '';
+
+  sorted.forEach((c,i)=>{
+    const pct = Math.round(c[key]/maxVal*100);
+    const avgPerStudent = Math.round(c[key]/c.students.length);
+    const item = document.createElement('div');
+    item.className = `rank-item ${cls}-mode ${rankClass(i)}`;
+    item.dataset.id = c.name;
+
+    // sort students
+    const sortedStu = sortBy(c.students, key).slice(0,6);
+    const maxStu = sortedStu[0]?sortedStu[0][key]:1;
+
+    item.innerHTML = `
+      <div class="rank-num ${numClass(i)}">${numDisplay(i)}</div>
+      <div class="rank-info">
+        <div class="rank-name">${c.name}</div>
+        <div class="rank-bar-wrap"><div class="rank-bar ${cls}" data-pct="${pct}"></div></div>
+        <div class="rank-meta">
+          <span class="badge neu">${c.students.length} alumnos</span>
+          <span class="badge ${cls}">~${fmt(avgPerStudent)} kWh/alumno</span>
+        </div>
+        <button class="expand-btn" onclick="toggleStudents(event,'${c.name}',this,'${mode}')">
+          <span>Ver alumnos</span><span class="arrow">▾</span>
+        </button>
+        <div class="students-wrap" id="stu-${c.name.replace(/\s/g,'-')}">
+          ${sortedStu.map(s=>`
+            <div class="student-row">
+              <div class="student-avatar" style="background:${s.color}">${s.initials}</div>
+              <div class="student-name">${s.name}</div>
+              <div class="student-bar-wrap"><div class="student-bar ${cls}" data-pct="${Math.round(s[key]/maxStu*100)}"></div></div>
+              <div class="student-kwh ${cls}">${fmt(s[key])} <span style="font-family:sans-serif;font-size:9px;opacity:.6">kWh</span></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="rank-value">
+        <span class="rank-kwh ${cls}">${fmt(c[key])}</span>
+        <span class="rank-unit">kWh</span>
+      </div>
+    `;
+    el.appendChild(item);
+  });
+
+  // animate bars
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      el.querySelectorAll('.rank-bar').forEach(b=>{
+        b.style.width = b.dataset.pct+'%';
+      });
+    });
+  });
+}
+
+function renderStudents(mode){
+  studentsMode = mode;
+  const key = mode==='gen'?'generated':'consumed';
+  const sorted = sortBy(allStudents, key).slice(0,20);
+  const maxVal = sorted[0][key];
+  const cls = mode==='gen'?'gen':'con';
+  const el = document.getElementById('studentsList');
+  el.innerHTML = '';
+
+  sorted.forEach((s,i)=>{
+    const pct = Math.round(s[key]/maxVal*100);
+    const item = document.createElement('div');
+    item.className = `rank-item ${cls}-mode ${rankClass(i)}`;
+    item.innerHTML = `
+      <div class="rank-num ${numClass(i)}">${numDisplay(i)}</div>
+      <div class="rank-info">
+        <div class="rank-name">${s.name}</div>
+        <div class="rank-bar-wrap"><div class="rank-bar ${cls}" data-pct="${pct}"></div></div>
+        <div class="rank-meta">
+          <span class="badge neu">${s.course}</span>
+          <span class="badge ${cls}">${mode==='gen'?'Generador':'Consumidor'} ${i<3?'élite':'activo'}</span>
+        </div>
+      </div>
+      <div class="rank-value">
+        <span class="rank-kwh ${cls}">${fmt(s[key])}</span>
+        <span class="rank-unit">kWh</span>
+      </div>
+    `;
+    el.appendChild(item);
+  });
+
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      el.querySelectorAll('.rank-bar').forEach(b=>{
+        b.style.width = b.dataset.pct+'%';
+      });
+    });
+  });
+}
+
+function toggleStudents(e, courseName, btn, mode){
+  e.stopPropagation();
+  const id = 'stu-'+courseName.replace(/\s/g,'-');
+  const wrap = document.getElementById(id);
+  const isOpen = wrap.classList.contains('open');
+
+  if(isOpen){
+    wrap.classList.remove('open');
+    btn.classList.remove('open');
+    btn.querySelector('span').textContent = 'Ver alumnos';
+  } else {
+    wrap.classList.add('open');
+    btn.classList.add('open');
+    btn.querySelector('span').textContent = 'Ocultar alumnos';
+    // animate student bars
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        wrap.querySelectorAll('.student-bar').forEach(b=>{
+          b.style.width = b.dataset.pct+'%';
+        });
+      });
+    });
+  }
+}
+
+function switchTab(panel, mode, btn){
+  const tabsId = panel==='courses'?'coursesTabs':'studentsTabs';
+  const tabs = document.getElementById(tabsId);
+  tabs.querySelectorAll('.tab').forEach(t=>{
+    t.classList.remove('active-gen','active-con');
+  });
+  btn.classList.add(mode==='gen'?'active-gen':'active-con');
+
+  if(panel==='courses') renderCourses(mode);
+  else renderStudents(mode);
+}
+
+// ========================
+// INIT
+// ========================
+renderStats();
+renderCourses('gen');
+renderStudents('gen');
+</script>
+</body>
+</html>
